@@ -254,7 +254,7 @@ process MEGAHIT {
     publishDir "${params.outdir}/megahit", mode:'copy'
     
     input:
-    tuple val(sample_id), path(reads)
+    tuple val(sample_id), path(reads_unm_p), path(reads_m_up)
 
     output:
     path('*'), emit: report
@@ -263,10 +263,32 @@ process MEGAHIT {
 
     script:
     """
-    megahit -1 ${reads[0]} -2 ${reads[1]} \
+    megahit -1 ${reads_unm_p[0]} -2 ${reads_unm_p[1]} -r ${reads_m_up} \
         -o ${sample_id} --out-prefix ${sample_id} -t ${task.cpus}
     """
 }
+
+process QUAST {
+    conda "/export/home/agletdinov/mambaforge/envs/quast"
+    //memory 500.GB
+    //maxForks 2
+    cpus 40
+
+    tag "Quast on ${sample_id}"
+    publishDir "${params.outdir}/quast", mode:'copy'
+    
+    input:
+    tuple val(sample_id), path(contigs)
+
+    output:
+    tuple val(sample_id), path('*'), emit: full_report
+
+    script:
+    """
+    quast -o ${sample_id} -r ${params.genome} --threads ${task.cpus} ${contigs}
+    """
+}
+
 
 process METAPHLAN {
     //conda 'bioconda::metaphlan'
