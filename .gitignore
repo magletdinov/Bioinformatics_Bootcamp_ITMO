@@ -1,3 +1,4 @@
 work/*
 .nextflow*
 .ipynb_checkpoints/*
+ncbi_taxonomy/*
